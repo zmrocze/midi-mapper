@@ -1,21 +1,21 @@
-[package]
-name = "walkways"
-version = "0.0.1"
-authors = ["zmrocze <karolochmanmilarski@gmail.com>"]
-edition = "2018"
-repository = ""
-readme = "README.md"
-license = "MIT"
-keywords = [""]
-description = """
-Your project description.
-"""
+# [package]
+# name = "walkways"
+# version = "0.0.1"
+# authors = ["zmrocze <karolochmanmilarski@gmail.com>"]
+# edition = "2018"
+# repository = ""
+# readme = "README.md"
+# license = "MIT"
+# keywords = [""]
+# description = """
+# Your project description.
+# """
 
 [workspace]
 members = [
-    "utils",
-    "cli",
-    "core",
+    "lib",
+    "exe",
+    "utils"
 ]
 
 [dependencies]
