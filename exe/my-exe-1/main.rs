@@ -4,11 +4,13 @@ use human_panic::setup_panic;
 #[cfg(debug_assertions)]
 extern crate better_panic;
 
-use utils::app_config::AppConfig;
+use utils::cli_config::{self, CliConfig};
 use utils::error::Result;
 use utils::logger::install_logger;
+use serde::Deserialize;
+use tracing::{info};
 
-use std::path::PathBuf;
+use std::{borrow::BorrowMut, fs::File, path::PathBuf};
 
 use clap::{Parser, Subcommand};
 
@@ -63,22 +65,37 @@ pub struct AppConfig {
     pub database: Database,
 }
 
-use cliargs::{Cli, Commands::*};
-
 /// Match commands
-pub fn cli_match() -> Result<()> {
+pub fn cli_match(config: CliConfig) -> Result<()> {
+    // let (cliconfig, command) = 
+    // { 
+        let mut config1 = config; 
+    let cliconfig = &mut config1;
+
     // Get matches
     let Cli{config, command} = Cli::parse();
-
+    
     // Merge clap config file if the value is set
-    AppConfig::merge_config(config)?;
-
+    cliconfig.merge_config(config)?;
+    // (config1, command)
+    // };
+    use Commands::*;
     // Matches Commands or display help
     return match command {
         Test { list } => Ok(println!("Tests!")),
         Run { list } => Ok(println!("Runs!")),
-        Config {  } => commands::config(),
-        Error {  } => commands::simulate_error(),
+        Config {  } => {
+            let appconfig: AppConfig = config1.fetch()?;
+            Ok(println!("{:#?}", appconfig))
+        },
+        Error {  } => {
+            tracing::info!("We are simulating an error");
+            {
+                File::open("thisfiledoesnotexist")?; Ok::<(), utils::error::Error>(())
+            }?;
+            Ok(())
+        
+        },
     }
 }
 
@@ -90,9 +107,9 @@ fn verify_cli() {
 
 fn main() -> Result<()> {
 
-    let default_config = "resources/default_config.toml";
+    let config_contents = include_str!("resources/default_config.toml");
     let env_prefix = "APP";
-    let config = utils::common_inits::common_inits(default_config, env_prefix)?;
-    let config = &mut config;
-    cli::cli_match()
+    let config = utils::common_inits::common_inits(config_contents, env_prefix)?;
+    // let config = &mut config;
+    cli_match(config)
 }

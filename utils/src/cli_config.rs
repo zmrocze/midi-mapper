@@ -1,4 +1,5 @@
 use config::{Config, Environment};
+use std::convert::{TryFrom, TryInto};
 use std::ops::Deref;
 use std::path::PathBuf;
 use std::sync::RwLock;
@@ -7,8 +8,8 @@ use serde::Deserialize;
 
 use super::error::Result;
 
-struct CliConfig {
-  config: Config
+pub struct CliConfig {
+  pub config: Config
 }
 
 impl CliConfig {
@@ -34,15 +35,13 @@ impl CliConfig {
         //     *w = settings;
         // }
 
-        Ok(CliConfig { config = settings })
+        Ok(CliConfig { config : settings })
     }
 
     pub fn merge_config(&mut self, config_file: Option<PathBuf>) -> Result<()> {
         // Merge settings with config file if there is one
         if let Some(config_file_path) = config_file {
-            let config = self.config.merge(config::File::from(config_file_path))?;
-            self.config = config;
-            Ok(())
+            self.config.merge(config::File::from(config_file_path))?;
         }
         Ok(())
     }
@@ -62,7 +61,7 @@ impl CliConfig {
     where
         T: serde::Deserialize<'de>,
     {
-        Ok(self.config.read()?.get::<T>(key)?)
+        Ok(self.config.get::<T>(key)?)
     }
 
     // Get CONFIG
@@ -78,12 +77,18 @@ impl CliConfig {
     //     // Coerce Config into AppConfig
     //     Ok(config_clone.try_into()?)
     // }
-}
-
-impl<TryInto<Config, A>> TryInto<CliConfig, A> for CliConfig {
-    type Error = TryInto<Config,A>::Error;
-
-    fn try_into(self) -> Result<A, Error> {
-        self.config.try_into()
+    pub fn fetch<'de, A>(self) -> Result<A> where 
+        A : Deserialize<'de> {
+        let a = self.config.try_into()?;
+        Ok(a)
     }
+
 }
+
+// impl< A : TryFrom<Config>> TryFrom<CliConfig> for A {
+//     type Error = <A as TryFrom<Config>>::Error;
+
+//     fn try_from(value: CliConfig) -> std::prelude::v1::Result<Self, Self::Error> {
+//     value.config.try_into()
+//     }
+// }
