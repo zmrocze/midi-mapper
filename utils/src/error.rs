@@ -34,7 +34,7 @@ impl fmt::Display for Error {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Fail)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ErrorKind {
     ConfigError,
     PoisonError,

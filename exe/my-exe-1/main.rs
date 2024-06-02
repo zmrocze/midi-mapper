@@ -4,13 +4,11 @@ use human_panic::setup_panic;
 #[cfg(debug_assertions)]
 extern crate better_panic;
 
-use utils::cli_config::{self, CliConfig};
+use utils::cli_config::CliConfig;
 use utils::error::Result;
-use utils::logger::install_logger;
 use serde::Deserialize;
-use tracing::{info};
 
-use std::{borrow::BorrowMut, fs::File, path::PathBuf};
+use std::{fs::File, path::PathBuf};
 
 use clap::{Parser, Subcommand};
 
@@ -82,8 +80,8 @@ pub fn cli_match(config: CliConfig) -> Result<()> {
     use Commands::*;
     // Matches Commands or display help
     return match command {
-        Test { list } => Ok(println!("Tests!")),
-        Run { list } => Ok(println!("Runs!")),
+        Test { list: _list } => Ok(println!("Tests!")),
+        Run { list: _list } => Ok(println!("Runs!")),
         Config {  } => {
             let appconfig: AppConfig = config1.fetch()?;
             Ok(println!("{:#?}", appconfig))
