@@ -1,26 +1,9 @@
 [package]
-name = "lib"
+name = "midi-mapper"
 version = "0.0.1"
 authors = [""]
-description = "The application core code"
-edition = "2018"
-
-# [dependencies]
-# utils = { path = "utils" }
-# cli = { path = "cli"}
-# core = { path = "core" }
-# human-panic = "1.0.3"
-# better-panic = "0.2.0"
-# tracing-subscriber = "0.3.17"
-
-# [dependencies.clap]
-# version = "4.3.0"
-# features = ["cargo", "derive"]
-
-# [dev-dependencies]
-# assert_cmd = "1.0.1"
-# predicates = "1.0.5"
-
+description = "Remap midi stream"
+edition = "2021"
 
 [dependencies]
 utils = { path = "../utils" }

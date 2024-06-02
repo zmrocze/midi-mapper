@@ -1,4 +1,3 @@
-
 #[cfg(not(debug_assertions))]
 use human_panic::setup_panic;
 
@@ -9,22 +8,21 @@ use crate::cli_config::CliConfig;
 use crate::error::Result;
 use crate::logger::install_logger;
 
-
-pub fn common_inits(config_contents : &str, env_prefix : &str) -> Result<CliConfig> {
+pub fn common_inits(config_contents: &str, env_prefix: &str) -> Result<CliConfig> {
   // Human Panic. Only enabled when *not* debugging.
   #[cfg(not(debug_assertions))]
   {
-      setup_panic!();
+    setup_panic!();
   }
 
   // Better Panic. Only enabled *when* debugging.
   #[cfg(debug_assertions)]
-  { 
-      better_panic::Settings::debug()
-          .most_recent_first(false)
-          .lineno_suffix(true)
-          .verbosity(better_panic::Verbosity::Full)
-          .install();
+  {
+    better_panic::Settings::debug()
+      .most_recent_first(false)
+      .lineno_suffix(true)
+      .verbosity(better_panic::Verbosity::Full)
+      .install();
   }
 
   // Initialize Configuration
@@ -34,5 +32,4 @@ pub fn common_inits(config_contents : &str, env_prefix : &str) -> Result<CliConf
   install_logger()?;
 
   Ok(config)
-
 }
