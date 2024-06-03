@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 better-panic = "0.2.0"
 utils = { path = "../utils" }
-lib = { path = "../lib"}
+midi-mapper = { path = "../lib"}
 serde = { version = "1.0", features = ["derive"]}
 tracing-subscriber = "0.3.17"
 tracing = "0.1.37"
