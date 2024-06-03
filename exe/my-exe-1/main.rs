@@ -31,20 +31,9 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-  /// does testing things
-  Test {
-    /// lists test values
-    #[arg(short, long)]
-    list: bool,
-  },
   /// does running things
-  Run {
-    /// lists run values?
-    #[arg(short, long)]
-    list: bool,
-  },
+  Run {},
   Config {},
-  Error {},
 }
 
 #[derive(Debug, Deserialize)]
@@ -75,19 +64,10 @@ pub fn cli_match(config: CliConfig) -> Result<()> {
   use Commands::*;
   // Matches Commands or display help
   return match command {
-    Test { list: _list } => Ok(println!("Tests!")),
-    Run { list: _list } => Ok(println!("Runs!")),
+    Run { } => Ok( println!("Nothing here") ),
     Config {} => {
       let appconfig: AppConfig = config1.fetch()?;
       Ok(println!("{:#?}", appconfig))
-    }
-    Error {} => {
-      tracing::info!("We are simulating an error");
-      {
-        File::open("thisfiledoesnotexist")?;
-        Ok::<(), utils::error::Error>(())
-      }?;
-      Ok(())
     }
   };
 }

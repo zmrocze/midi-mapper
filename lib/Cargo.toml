@@ -9,6 +9,7 @@ edition = "2021"
 utils = { path = "../utils" }
 tracing = "0.1.37"
 midir = "0.10.0"
+midly = "0.5.3"
 
 [dependencies.clap]
 version = "4.3.0"

@@ -1,77 +1,68 @@
-
 use std::error::Error;
 use std::io::{stdin, stdout, Write};
-use std::thread::sleep;
-use std::time::Duration;
+use midly::{live::LiveEvent, MidiMessage, num::u4};
+use midir::{Ignore, MidiIO, MidiInput, MidiOutput};
+use midir::os::unix::{VirtualInput, VirtualOutput};
 
-use midir::{MidiOutput, MidiOutputPort};
+#[derive(Debug, Clone, Copy)]
+struct MidiData {
+    channel : u4,
+    message : MidiMessage,
+}
 
-fn main() {
-    match run() {
-        Ok(_) => (),
-        Err(err) => println!("Error: {}", err),
+impl MidiData {
+    fn new(channel : u4, message : MidiMessage) -> Self {
+        Self { channel, message }
     }
 }
 
-fn run() -> Result<(), Box<dyn Error>> {
-    let midi_out = MidiOutput::new("My Test Output")?;
-
-    // Get an output port (read from console if multiple are available)
-    let out_ports = midi_out.ports();
-    let out_port: &MidiOutputPort = match out_ports.len() {
-        0 => return Err("no output port found".into()),
-        1 => {
-            println!(
-                "Choosing the only available output port: {}",
-                midi_out.port_name(&out_ports[0]).unwrap()
-            );
-            &out_ports[0]
-        }
-        _ => {
-            println!("\nAvailable output ports:");
-            for (i, p) in out_ports.iter().enumerate() {
-                println!("{}: {}", i, midi_out.port_name(p).unwrap());
-            }
-            print!("Please select output port: ");
-            stdout().flush()?;
-            let mut input = String::new();
-            stdin().read_line(&mut input)?;
-            out_ports
-                .get(input.trim().parse::<usize>()?)
-                .ok_or("invalid output port selected")?
-        }
-    };
-
-    println!("\nOpening connection");
-    let mut conn_out = midi_out.connect(out_port, "midir-test")?;
-    println!("Connection open. Listen!");
-    {
-        // Define a new scope in which the closure `play_note` borrows conn_out, so it can be called easily
-        let mut play_note = |note: u8, duration: u64| {
-            const NOTE_ON_MSG: u8 = 0x90;
-            const NOTE_OFF_MSG: u8 = 0x80;
-            const VELOCITY: u8 = 0x64;
-            // We're ignoring errors in here
-            let _ = conn_out.send(&[NOTE_ON_MSG, note, VELOCITY]);
-            sleep(Duration::from_millis(duration * 150));
-            let _ = conn_out.send(&[NOTE_OFF_MSG, note, VELOCITY]);
-        };
-
-        sleep(Duration::from_millis(4 * 150));
-
-        play_note(66, 4);
-        play_note(65, 3);
-        play_note(63, 1);
-        play_note(61, 6);
-        play_note(59, 2);
-        play_note(58, 4);
-        play_note(56, 4);
-        play_note(54, 4);
+impl<'a> From<MidiData> for LiveEvent<'a> {
+    fn from(data : MidiData) -> Self {
+        LiveEvent::Midi { channel: data.channel, message: data.message }
     }
-    sleep(Duration::from_millis(150));
-    println!("\nClosing connection");
-    // This is optional, the connection would automatically be closed as soon as it goes out of scope
-    conn_out.close();
-    println!("Connection closed");
+}
+
+#[cfg(not(target_arch = "wasm32"))] // conn_out is not `Send` in Web MIDI, which means it cannot be passed to connect
+pub fn create_virtual_midi_device<T, F>(device_name : &str, mut map : F) -> Result<(), Box<dyn Error>> 
+    where 
+    // F: FnMut(u64, &[u8], &mut T) -> (u4, MidiMessage) + Send + 'static,
+    F: FnMut(MidiData) -> MidiData + Send + 'static,
+    T: Send {
+
+    let midi_in = MidiInput::new(device_name)?;
+    // midi_in.ignore(Ignore::None);
+    let midi_out = MidiOutput::new(device_name)?;
+    let mut port_out = midi_out.create_virtual( "out")?;
+    
+    // _conn_in needs to be a named parameter, because it needs to be kept alive until the end of the scope
+    let port_in = midi_in.create_virtual(
+        "in",
+        move |_stamp, message, _| {
+            let event = LiveEvent::parse(message).unwrap();
+            let mut send_out_msg = |event : LiveEvent<'_>| {
+                let mut buf = Vec::new();
+                event.write(&mut buf).unwrap();
+                port_out
+                    .send(&buf[..])
+                    .unwrap_or_else(|e| println!("Error when forwarding message: {:?}", e));
+            };
+            match event {
+                LiveEvent::Midi { channel, message } => {
+                    let out_msg: LiveEvent<'_> = map( MidiData::new(channel, message)).into();
+                    send_out_msg(out_msg);
+                }
+                x => {
+                    send_out_msg(x);
+                }
+            }
+        },
+        (),
+    )?;
+    println!("Created virtual MIDI device {} with in and out ports", device_name);
+    let mut input = String::new();
+    stdin().read_line(&mut input)?; // wait for next enter key press
+    
+    port_in.close();
+    println!("Closed connections");
     Ok(())
 }
