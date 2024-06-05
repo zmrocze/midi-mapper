@@ -13,20 +13,22 @@ pub struct Error {
   inner: Context<ErrorKind>,
 }
 
+impl std::error::Error for Error {}
+
 impl Error {
   pub fn kind(&self) -> ErrorKind {
     *self.inner.get_context()
   }
 }
 
-impl Fail for Error {
-  fn cause(&self) -> Option<&dyn Fail> {
-    self.inner.cause()
-  }
-  fn backtrace(&self) -> Option<&Backtrace> {
-    self.inner.backtrace()
-  }
-}
+// impl Fail for Error {
+//   fn cause(&self) -> Option<&dyn Fail> {
+//     self.inner.cause()
+//   }
+//   fn backtrace(&self) -> Option<&Backtrace> {
+//     self.inner.backtrace()
+//   }
+// }
 
 impl fmt::Display for Error {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -37,7 +39,6 @@ impl fmt::Display for Error {
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ErrorKind {
   ConfigError,
-  PoisonError,
   IoError,
   ClapError,
   LoggerError,
@@ -67,14 +68,6 @@ impl From<config::ConfigError> for Error {
   fn from(err: config::ConfigError) -> Self {
     Error {
       inner: err.context(ErrorKind::ConfigError),
-    }
-  }
-}
-
-impl<T> From<std::sync::PoisonError<T>> for Error {
-  fn from(_err: std::sync::PoisonError<T>) -> Self {
-    Error {
-      inner: Context::from(ErrorKind::PoisonError),
     }
   }
 }

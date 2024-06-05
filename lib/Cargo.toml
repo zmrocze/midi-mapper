@@ -10,6 +10,9 @@ utils = { path = "../utils" }
 tracing = "0.1.37"
 midir = "0.10.0"
 midly = "0.5.3"
+fxhash = "0.2.1"
+itertools = "0.13.0"
+serde = { version = "1.0", features = ["derive"]}
 
 [dependencies.clap]
 version = "4.3.0"
