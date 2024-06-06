@@ -4,6 +4,7 @@ use std::path::PathBuf;
 
 use super::error::Result;
 
+#[derive(Debug)]
 pub struct CliConfig {
   pub config: Config,
 }
@@ -19,7 +20,7 @@ impl CliConfig {
       //let contents = include_str!(config_file_path);
       settings.merge(config::File::from_str(
         &config_contents,
-        config::FileFormat::Toml,
+        config::FileFormat::Yaml,
       ))?;
     }
 

@@ -1,7 +1,0 @@
-[profiles]
-default: 
-  notes:
-    1
-  chord_types:
-    1: maj
-    2: min

@@ -1,10 +1,9 @@
 // use std::collections::HashMap;
 
-use std::collections::HashMap;
 
 use fxhash::FxHashMap;
 use itertools::Itertools;
-use midly::{live::LiveEvent, num::{u4, u7}, MidiMessage};
+use midly::{num::u7, MidiMessage};
 use serde::Deserialize;
 
 use crate::midi_device::MidiActionPassChannel;

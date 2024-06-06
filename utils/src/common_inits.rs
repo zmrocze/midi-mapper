@@ -33,3 +33,26 @@ pub fn common_inits(config_contents: &str, env_prefix: &str) -> Result<CliConfig
 
   Ok(config)
 }
+
+pub fn app_init() -> Result<()> {
+  // Human Panic. Only enabled when *not* debugging.
+  #[cfg(not(debug_assertions))]
+  {
+    setup_panic!();
+  }
+
+  // Better Panic. Only enabled *when* debugging.
+  #[cfg(debug_assertions)]
+  {
+    better_panic::Settings::debug()
+      .most_recent_first(false)
+      .lineno_suffix(true)
+      .verbosity(better_panic::Verbosity::Full)
+      .install();
+  }
+
+  // Setup Logging
+  install_logger()?;
+
+  Ok(())
+}

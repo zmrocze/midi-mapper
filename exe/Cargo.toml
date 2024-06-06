@@ -1,15 +1,15 @@
 [package]
-name = "my-exe-1"
+name = "chordifier"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-better-panic = "0.2.0"
 utils = { path = "../utils" }
 midi-mapper = { path = "../lib"}
 serde = { version = "1.0", features = ["derive"]}
 tracing-subscriber = "0.3.17"
 tracing = "0.1.37"
+serde_yaml = "0.9.34+deprecated"
 # core = { path = "core" }
 # human-panic = "1.0.3"
 
@@ -23,5 +23,5 @@ features = ["cargo", "derive"]
 
 
 [[bin]]
-name = "my-exe-1"
-path = "my-exe-1/main.rs"
+name = "chordifier"
+path = "chordifier/main.rs"

@@ -1,7 +1,7 @@
 use std::error::Error;
-use std::io::{stdin, stdout, Write};
+use std::io::stdin;
 use midly::{live::LiveEvent, MidiMessage, num::u4};
-use midir::{Ignore, MidiIO, MidiInput, MidiOutput};
+use midir::{MidiInput, MidiOutput};
 use midir::os::unix::{VirtualInput, VirtualOutput};
 
 #[derive(Debug, Clone, Copy)]

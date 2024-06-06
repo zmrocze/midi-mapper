@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use midly::num::u7;
 use serde::Deserialize;
 
@@ -34,7 +36,7 @@ impl From<ChordByType> for Chord {
   }
 }
 
-pub fn make_mapping( roots : Vec<(Note, Note)> , chord_types : Vec<(Note, ChordType)>) -> ChordsMap {
+pub fn make_mapping( roots : HashMap<Note, Note> , chord_types : HashMap<Note, ChordType>) -> ChordsMap {
   let mut map : Vec<(Chord, Chord)> = Vec::new();
   for (note1, root) in roots {
     for (note2, chord_type) in &chord_types {

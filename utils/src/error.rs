@@ -1,7 +1,7 @@
 use std::fmt;
 use std::result;
 
-use failure::{Backtrace, Context, Fail};
+use failure::{Context, Fail};
 use tracing::subscriber::SetGlobalDefaultError;
 
 /// A type alias that forces the usage of the custom error type.
