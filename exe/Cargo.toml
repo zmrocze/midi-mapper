@@ -23,5 +23,9 @@ features = ["cargo", "derive"]
 
 
 [[bin]]
-name = "chordifier"
-path = "chordifier/main.rs"
+name = "midi-mapper"
+path = "midi-mapper/main.rs"
+
+[[bin]]
+name = "midi-printer"
+path = "midi-printer/main.rs"
