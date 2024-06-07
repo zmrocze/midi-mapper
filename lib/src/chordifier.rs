@@ -1,5 +1,3 @@
-// use std::collections::HashMap;
-
 
 use fxhash::FxHashMap;
 use itertools::Itertools;
@@ -63,9 +61,10 @@ impl ChordsMap {
   }
 }
 
-// Chord that is currently being played
-struct ChordOn {
-  chord : Chord
+// Chord that is currently being played and pressed
+struct PressedChord {
+  chord : Chord,
+  // playing : Chord
 }
 
 enum Response<'a> {
@@ -74,13 +73,14 @@ enum Response<'a> {
   Received
 }
 
-impl ChordOn {
-  pub fn new(chord : Chord) -> Self {
-    Self { chord }
+impl PressedChord {
+  pub fn empty() -> Self {
+    Self { chord : Chord { notes: Vec::new() } }
   }
 
   pub fn update<'a>(&mut self, mapping: &'a ChordsMap, note: MidiMessage) -> Response<'a> {
     use Response::*;
+    // update pressed notes
     match note {
       MidiMessage::NoteOn { key, .. } => self.chord.notes.push(key.into()),
       MidiMessage::NoteOff { key, .. } => {
@@ -93,8 +93,9 @@ impl ChordOn {
       },
       other => return Passthrough(other)
     }
+    // update playing notes
     if let Some(chord) = mapping.map(&self.chord) {
-      self.chord.notes.clear();
+      // self.pressed.notes.clear();
       SendChord(chord)
     } else {
       Received
@@ -103,46 +104,58 @@ impl ChordOn {
 }
 
 // TODO: maybe just make MidiAction take additional immutable ref thats passed from create_virtual_midi_device? interesting if compiler would treat this different then
-// Pressed chord and the static mapping - everything needed to implement `MidiAction`
+// Pressed chord, playing chord and the static mapping - everything needed to implement `MidiAction`
 // #[derive(Clone, Debug)]
 pub struct Chordifier {
+  // static mapping between chords
   mapping : ChordsMap,
-  chord_on : ChordOn
+  // currently pressed chord
+  pressed : PressedChord,
+  // currently playing chord
+  playing : Option<Chord>
 }
 
 impl Chordifier {
   pub fn new(mapping : ChordsMap) -> Self {
-    Self { mapping, chord_on : ChordOn::new(Chord { notes: Vec::new() }) }
+    Self { mapping, pressed : PressedChord::empty(), playing : None }
   }
 }
 
-impl MidiActionPassChannel for Chordifier { 
+impl MidiActionPassChannel for Chordifier {
+
+  // Maps chords to chords by tracking which chord is pressed and playing.
+  // A chord plays only while the currently pressed chord corresponds to it.
+  // NoteOn's and NoteOff's are send with max velocity (127)
   fn midi_action_on_msg<O>(&mut self, data : MidiMessage, mut outport : O ) where 
     O: FnMut(MidiMessage) {
+    let mapping = &self.mapping;
+    let pressed = &mut self.pressed;
+    let playing = &mut self.playing;
+    // The pressed chord changes in the case of SendChord and Received.
+    let mut stop_playing = |outport: &mut O| {
+      match playing {
+          Some(chord) => {
+            for note in chord.notes.iter() {
+              outport(MidiMessage::NoteOff { key: note.note, vel: u7::new(127) });
+            };
+            *playing = None;
+          },
+          None => (),
+      }
+    };
     // Sends chords with max velocity!
-    match self.chord_on.update(&self.mapping, data) {
+    match pressed.update(mapping, data) {
       Response::SendChord(chord) => {
+        stop_playing(&mut outport);
         for note in chord.notes.iter() {
           outport(MidiMessage::NoteOn { key: note.note, vel: u7::new(127) });
         }
+        *playing = Some(chord.clone());
       },
       Response::Passthrough(msg) => outport(msg),
-      Response::Received => ()
+      Response::Received => {
+        stop_playing(&mut outport)
+      },
     }
   }
 }
-
-// #[macro_use]
-// extern crate lazy_static;
-
-// use std::collections::HashMap;
-
-// lazy_static! {
-//     static ref HASHMAP: HashMap<u32, &'static str> = {
-//         let mut m = HashMap::new();
-//         m.insert(0, "foo");
-//         m.insert(1, "bar");
-//         m.insert(2, "baz");
-//         m
-//     };
-// }
