@@ -1,7 +1,10 @@
+use std::fmt;
+
 use fxhash::FxHashMap;
 use itertools::Itertools;
 use midly::{num::u7, MidiMessage};
-use serde::Deserialize;
+use serde::de::{self};
+use serde::{de::Visitor, Deserialize};
 
 use crate::midi_device::MidiActionPassChannel;
 
@@ -21,12 +24,88 @@ pub struct Note {
   pub note: u7,
 }
 
+struct NoteVisitor;
+
+impl<'de> Visitor<'de> for NoteVisitor {
+  type Value = Note;
+
+  fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    formatter.write_str("an integer between 0 and 127 or a string with such integer")
+  }
+
+  fn visit_u8<E>(self, value: u8) -> Result<Self::Value, E>
+  where
+    E: de::Error,
+  {
+    Ok(Note::new(value.into()))
+  }
+
+  fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+  where
+    E: de::Error,
+  {
+    let n = v.parse::<u8>().map_err(de::Error::custom)?;
+    Ok(Note::new(n.into()))
+  }
+  fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+  where
+    E: de::Error,
+  {
+    let n = v.parse::<u8>().map_err(de::Error::custom)?;
+    Ok(Note::new(n.into()))
+  }
+
+  fn visit_i32<E>(self, value: i32) -> Result<Self::Value, E>
+  where
+    E: de::Error,
+  {
+    let n = u8::try_from(value).map_err(de::Error::custom)?;
+    Ok(Note::new(n.into()))
+  }
+  fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
+  where
+    E: de::Error,
+  {
+    let n = u8::try_from(value).map_err(de::Error::custom)?;
+    Ok(Note::new(n.into()))
+  }
+  fn visit_u32<E>(self, value: u32) -> Result<Self::Value, E>
+  where
+    E: de::Error,
+  {
+    let n = u8::try_from(value).map_err(de::Error::custom)?;
+    Ok(Note::new(n.into()))
+  }
+  fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
+  where
+    E: de::Error,
+  {
+    let n = u8::try_from(value).map_err(de::Error::custom)?;
+    Ok(Note::new(n.into()))
+  }
+  fn visit_u128<E>(self, v: u128) -> Result<Self::Value, E>
+  where
+    E: de::Error,
+  {
+    let n = u8::try_from(v).map_err(de::Error::custom)?;
+    Ok(Note::new(n.into()))
+  }
+  fn visit_i128<E>(self, v: i128) -> Result<Self::Value, E>
+  where
+    E: de::Error,
+  {
+    let n = u8::try_from(v).map_err(de::Error::custom)?;
+    Ok(Note::new(n.into()))
+  }
+}
+
 impl<'a> Deserialize<'a> for Note {
   fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
   where
     D: serde::Deserializer<'a>,
   {
-    Deserialize::deserialize(deserializer).map(|x: u8| Note::new(x.into()))
+    // Deserialize::deserialize(deserializer).map(|x: u8| Note::new(x.into()))
+    deserializer.deserialize_any(NoteVisitor)
   }
 }
 
