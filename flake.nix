@@ -67,23 +67,40 @@
           # This allows consumers to only depend on (and build) only what they need.
           # Though it is possible to build the entire workspace as a single derivation,
           # so this is left up to you on how to organize things
-          midi-mapper = craneLib.buildPackage (individualCrateArgs // {
+          midi-mapper = craneLib.buildPackage (myLib.recursiveUpdateConcat individualCrateArgs {
             pname = "midi-mapper";
             src = fileSetForCrate ./exe;
             cargoExtraArgs = "--profile release --bin midi-mapper";
+            runtimeInputs = with pkgs; [
+              dhall-yaml
+            ];
+            nativeBuildInputs = with pkgs; [
+              dhall-yaml
+            ];
+            buildInputs = with pkgs; [
+              dhall-yaml
+            ];
           });
           midi-printer = craneLib.buildPackage (individualCrateArgs // {
             pname = "midi-printer";
             src = fileSetForCrate ./exe;
             cargoExtraArgs = "--profile release --bin midi-printer";
           });
+          midi-mapper-wrapped = pkgs.writeShellApplication {
+            name = "midi-mapper";
+            runtimeInputs = [ pkgs.dhall-yaml midi-mapper ];
+            text = ''
+              midi-mapper "$@"
+            '';
+          };
           in {
             packages = {
-              inherit midi-mapper midi-printer;
+              inherit midi-printer;
+              midi-mapper = midi-mapper-wrapped;
             };
             apps = {
               midi-mapper = flake-utils.lib.mkApp {
-                drv = midi-mapper;
+                drv = midi-mapper-wrapped;
               };
               midi-printer = flake-utils.lib.mkApp {
                 drv = midi-printer;

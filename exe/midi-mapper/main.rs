@@ -102,8 +102,14 @@ fn main() -> Result<(), Box<dyn Error>> {
   let default_config: ConfigFile =
     serde_yaml::from_str(include_str!("resources/default_config.yaml"))?;
   let user_config = if let Some(config_path) = config {
-    let contents = read_to_string(config_path)?;
-    serde_yaml::from_str(&contents)?
+    let contents = read_to_string(config_path.clone())?;
+    match config_path.extension() {
+      Some(ext) if ext == "dhall" => {
+        let yaml = utils::call_process::call_dhall_to_yaml(contents.into_bytes()).map_err(|e| format!("{:?}", e))?;
+        serde_yaml::from_slice(&yaml)?
+      }
+      _ => serde_yaml::from_str(&contents)?,
+    }
   } else {
     ConfigFile::default()
   };
