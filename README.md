@@ -1,6 +1,12 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-undefined
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-cargo-generate template for rust-starter
+# midi mapper
+
+```bash
+nix run .#midi-mapper -- --help
+```
+
+for configs see the default in `exe/midi-mapper/resources`. There's dhall and yaml versions, dhall is source to yaml with `dhall-to-yaml-ng`.
+
+# midi printer
+
+same usage. prints midi notes and forwards

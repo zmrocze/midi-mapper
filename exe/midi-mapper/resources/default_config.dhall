@@ -1,6 +1,18 @@
 { profiles.default
   =
-  { chord_types = { `53` = "MAJ", `55` = "MIN", `57` = "DIM", `59` = "AUG" }
+  { chord_types =
+    { `53`= "MAJ",
+      `55`= "MIN",
+      `57`= "DIM",
+      `59`= "AUG",
+      `60`= "DOM7",
+      `62`= "MIN7",
+      `64`= "MAJ7",
+      `65`= "MINMAJ7",
+      `67`= "DIM7",
+      `69`= "HDIM7",
+      `71`= "AUGMAJ7"
+    }
   , roots =
     { `36` = 48
     , `37` = 49
