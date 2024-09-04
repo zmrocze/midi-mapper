@@ -1,7 +1,6 @@
 use clap::Parser;
 use midi_mapper::{
-  chordifier::{Chordifier, Note},
-  chords::{make_mapping, ChordType},
+  chordifier::{ChannelChord, Chordifier, ChordsMap, Note},
   midi_device::create_virtual_midi_device,
 };
 use serde::Deserialize;
@@ -36,9 +35,14 @@ pub struct AppConfig {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+struct KeyVal<K, V> {
+  key: K,
+  val: V,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct Profile {
-  roots: HashMap<Note, Note>,
-  chord_types: HashMap<Note, ChordType>,
+  map : Vec<KeyVal<ChannelChord, ChannelChord>>
 }
 
 #[derive(Debug, Deserialize)]
@@ -88,7 +92,7 @@ impl Default for ConfigFile {
 
 fn run(config: AppConfig) -> Result<(), Box<dyn Error>> {
   println!("Using profile: {}", config.profile_name);
-  let chords_map = make_mapping(config.profile.roots, config.profile.chord_types);
+  let chords_map = ChordsMap::new(config.profile.map.into_iter().map(|x| (x.key, x.val)).collect());
   let chordifier = Chordifier::new(chords_map);
   create_virtual_midi_device(config.name.as_str(), chordifier)
 }

@@ -6,8 +6,8 @@ use std::io::stdin;
 
 #[derive(Debug, Clone, Copy)]
 pub struct MidiData {
-  channel: u4,
-  message: MidiMessage,
+  pub channel: u4,
+  pub message: MidiMessage,
 }
 
 impl MidiData {

@@ -10,9 +10,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     flake-utils.url = "github:numtide/flake-utils";
+    midi-mapper-og = "github:zmrocze/midi-mapper/41e9610";
   };
 
-  outputs = inputs@{ self, nixpkgs, flake-parts, my-lib, crane, flake-utils, ... }:
+  outputs = inputs@{ self, nixpkgs, flake-parts, my-lib, crane, flake-utils, midi-mapper-og, ... }:
     let
       myLib = my-lib.lib;
     in
@@ -97,6 +98,7 @@
             packages = {
               inherit midi_printer;
               midi_mapper = midi_mapper-wrapped;
+              og-midi-mapper = midi-mapper-og.packages.${system}.midi_mapper;
             };
             apps = {
               midi_mapper = flake-utils.lib.mkApp {
@@ -105,6 +107,7 @@
               midi_printer = flake-utils.lib.mkApp {
                 drv = midi_printer;
               };
+              og-midi-mapper = midi-mapper-og.apps.${system}.midi_mapper;
             };
 
             devShells.default = craneLib.devShell {
