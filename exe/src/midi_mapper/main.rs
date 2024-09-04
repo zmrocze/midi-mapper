@@ -28,6 +28,7 @@ pub struct Cli {
   pub name: Option<String>,
 }
 
+#[derive(Debug, Clone)]
 pub struct AppConfig {
   pub name: String,
   pub profile: Profile,
@@ -41,7 +42,7 @@ pub struct Profile {
 }
 
 #[derive(Debug, Deserialize)]
-struct Profiles {
+pub struct Profiles {
   profiles: HashMap<String, Profile>,
 }
 
@@ -54,7 +55,7 @@ impl Default for Profiles {
 }
 
 #[derive(Debug, Deserialize)]
-struct ConfigFile {
+pub struct ConfigFile {
   pub name: Option<String>,
   pub profile: Option<String>,
 
@@ -94,18 +95,25 @@ fn run(config: AppConfig) -> Result<(), Box<dyn Error>> {
 
 fn main() -> Result<(), Box<dyn Error>> {
   utils::common_inits::app_init()?;
+  let cli = Cli::parse();
+  run_cli_parsing(cli).and_then(run)
+}
+
+pub fn run_cli_parsing(cli: Cli) -> Result<AppConfig, Box<dyn Error>> {
   let Cli {
     config,
     name: _name,
     profile: _profile,
-  } = Cli::parse();
+  } = cli;
+
   let default_config: ConfigFile =
     serde_yaml::from_str(include_str!("resources/default_config.yaml"))?;
   let user_config = if let Some(config_path) = config {
     let contents = read_to_string(config_path.clone())?;
     match config_path.extension() {
       Some(ext) if ext == "dhall" => {
-        let yaml = utils::call_process::call_dhall_to_yaml(contents.into_bytes()).map_err(|e| format!("{:?}", e))?;
+        let yaml = utils::call_process::call_dhall_to_yaml(contents.into_bytes())
+          .map_err(|e| format!("{:?}", e))?;
         serde_yaml::from_slice(&yaml)?
       }
       _ => serde_yaml::from_str(&contents)?,
@@ -124,11 +132,11 @@ fn main() -> Result<(), Box<dyn Error>> {
   match profile {
     Some(profile) => {
       let appconfig = AppConfig {
-        name: config.name.unwrap_or("midi-mapper".to_string()),
+        name: config.name.unwrap_or("midi_mapper".to_string()),
         profile_name,
         profile: profile.clone(),
       };
-      run(appconfig)
+      Ok(appconfig)
     }
     None => Err(format!("Profile {} not found", profile_name).into()),
   }

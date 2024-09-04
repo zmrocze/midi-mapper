@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 utils = { path = "../utils" }
-midi-mapper = { path = "../lib"}
+midi_mapper = { path = "../lib"}
 serde = { version = "1.0", features = ["derive"]}
 tracing-subscriber = "0.3.17"
 tracing = "0.1.37"
@@ -22,10 +22,11 @@ features = ["cargo", "derive"]
 # predicates = "1.0.5"
 
 
-[[bin]]
-name = "midi-mapper"
-path = "midi-mapper/main.rs"
 
 [[bin]]
-name = "midi-printer"
-path = "midi-printer/main.rs"
+name = "midi_mapper"
+path = "src/midi_mapper/main.rs"
+
+[[bin]]
+name = "midi_printer"
+path = "src/midi_printer/main.rs"

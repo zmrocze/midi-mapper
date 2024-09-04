@@ -191,7 +191,7 @@ name = "chordifier"
 version = "0.1.0"
 dependencies = [
  "clap",
- "midi-mapper",
+ "midi_mapper",
  "serde 1.0.203",
  "serde_yaml",
  "tracing",
@@ -557,7 +557,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c8640c5d730cb13ebd907d8d04b52f55ac9a2eec55b440c8892f40d56c76c1d"
 
 [[package]]
-name = "midi-mapper"
+name = "midi_mapper"
 version = "0.0.1"
 dependencies = [
  "clap",
@@ -567,6 +567,15 @@ dependencies = [
  "midly",
  "serde 1.0.203",
  "tracing",
+ "utils",
+]
+
+[[package]]
+name = "midi_mapper-tests"
+version = "0.0.1"
+dependencies = [
+ "chordifier",
+ "midi_mapper",
  "utils",
 ]
 

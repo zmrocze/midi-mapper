@@ -1,0 +1,21 @@
+[package]
+name = "midi_mapper-tests"
+version = "0.0.1"
+authors = [""]
+description = "tests"
+edition = "2021"
+
+[dependencies]
+utils = { path = "../utils" }
+midi_mapper = { path = "../lib" }
+chordifier = { path = "../exe" }
+# tracing = "0.1.37"
+# midir = "0.10.0"
+# midly = "0.5.3"
+# fxhash = "0.2.1"
+# itertools = "0.13.0"
+# serde = { version = "1.0", features = ["derive"]}
+
+# [dependencies.clap]
+# version = "4.3.0"
+# features = ["cargo", "derive"]

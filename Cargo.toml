@@ -2,8 +2,10 @@
 members = [
     "lib",
     "exe",
-    "utils"
+    "utils",
+    "test"
 ]
+resolver = "2"
 
 [profile.dev]
 opt-level=0

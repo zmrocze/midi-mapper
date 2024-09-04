@@ -1,5 +1,5 @@
 [package]
-name = "midi-mapper"
+name = "midi_mapper"
 version = "0.0.1"
 authors = [""]
 description = "Remap midi stream"

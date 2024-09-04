@@ -1,6 +1,6 @@
 use std::io::Write;
-use std::process::Stdio;
 use std::process::Command;
+use std::process::Stdio;
 
 #[derive(Debug)]
 pub enum Error {
@@ -21,10 +21,7 @@ impl From<std::process::ExitStatus> for Error {
 }
 
 pub fn call_process(mut cmd: Command, stdin: Vec<u8>) -> Result<Vec<u8>, Error> {
-  let mut cmd = cmd
-    .stdin(Stdio::piped())
-    .stdout(Stdio::piped())
-    .spawn()?;
+  let mut cmd = cmd.stdin(Stdio::piped()).stdout(Stdio::piped()).spawn()?;
   let mut input = cmd.stdin.take().unwrap();
   input.write_all(&stdin)?;
   input.flush()?;
@@ -37,7 +34,7 @@ pub fn call_process(mut cmd: Command, stdin: Vec<u8>) -> Result<Vec<u8>, Error> 
   }
 }
 
-pub fn call_dhall_to_yaml(dhall : Vec<u8>) -> Result<Vec<u8>, Error> {
+pub fn call_dhall_to_yaml(dhall: Vec<u8>) -> Result<Vec<u8>, Error> {
   let cmd = Command::new("dhall-to-yaml-ng");
   call_process(cmd, dhall)
 }

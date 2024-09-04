@@ -1,5 +1,5 @@
 {
-  description = "midi-mapper";
+  description = "midi_mapper";
 
   inputs = {
     flake-parts.url = "github:hercules-ci/flake-parts";
@@ -67,10 +67,10 @@
           # This allows consumers to only depend on (and build) only what they need.
           # Though it is possible to build the entire workspace as a single derivation,
           # so this is left up to you on how to organize things
-          midi-mapper = craneLib.buildPackage (myLib.recursiveUpdateConcat individualCrateArgs {
-            pname = "midi-mapper";
+          midi_mapper = craneLib.buildPackage (myLib.recursiveUpdateConcat individualCrateArgs {
+            pname = "midi_mapper";
             src = fileSetForCrate ./exe;
-            cargoExtraArgs = "--profile release --bin midi-mapper";
+            cargoExtraArgs = "--profile release --bin midi_mapper";
             runtimeInputs = with pkgs; [
               dhall-yaml
             ];
@@ -81,29 +81,29 @@
               dhall-yaml
             ];
           });
-          midi-printer = craneLib.buildPackage (individualCrateArgs // {
-            pname = "midi-printer";
+          midi_printer = craneLib.buildPackage (individualCrateArgs // {
+            pname = "midi_printer";
             src = fileSetForCrate ./exe;
-            cargoExtraArgs = "--profile release --bin midi-printer";
+            cargoExtraArgs = "--profile release --bin midi_printer";
           });
-          midi-mapper-wrapped = pkgs.writeShellApplication {
-            name = "midi-mapper";
-            runtimeInputs = [ pkgs.dhall-yaml midi-mapper ];
+          midi_mapper-wrapped = pkgs.writeShellApplication {
+            name = "midi_mapper";
+            runtimeInputs = [ pkgs.dhall-yaml midi_mapper ];
             text = ''
-              midi-mapper "$@"
+              midi_mapper "$@"
             '';
           };
           in {
             packages = {
-              inherit midi-printer;
-              midi-mapper = midi-mapper-wrapped;
+              inherit midi_printer;
+              midi_mapper = midi_mapper-wrapped;
             };
             apps = {
-              midi-mapper = flake-utils.lib.mkApp {
-                drv = midi-mapper-wrapped;
+              midi_mapper = flake-utils.lib.mkApp {
+                drv = midi_mapper-wrapped;
               };
-              midi-printer = flake-utils.lib.mkApp {
-                drv = midi-printer;
+              midi_printer = flake-utils.lib.mkApp {
+                drv = midi_printer;
               };
             };
 

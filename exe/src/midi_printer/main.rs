@@ -25,7 +25,7 @@ impl MidiAction for Printer {
 }
 
 fn run() -> Result<(), Box<dyn Error>> {
-  create_virtual_midi_device("midi-printer", Printer {})
+  create_virtual_midi_device("midi_printer", Printer {})
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
