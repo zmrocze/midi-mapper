@@ -1,6 +1,8 @@
 let list-map = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/map.dhall
 let concat-map = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/concatMap.dhall
 let int-add = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/Integer/add.dhall
+
+-- types
 let
   ChordTypes = <
     MAJ
@@ -15,6 +17,15 @@ let
     | HDIM7
     | AUGMAJ7
   >
+let Note = { note : Integer, channel : Integer }
+let 
+  IntInt = { key : Integer, val : Integer}
+let 
+  IntChordType = { key : Integer, val : ChordTypes}
+let Chord = { notes : List Note }
+let chord = \(notes : List Note) -> { notes = notes }
+let ChordPair = { key : Chord, val : Chord }
+
 let intervals = \(type : ChordTypes) -> merge {
     MAJ = [+0, +4, +7],
     MIN = [+0, +3, +7],
@@ -29,13 +40,6 @@ let intervals = \(type : ChordTypes) -> merge {
     AUGMAJ7 = [+0, +4, +8, +11],
   } type
 
-let Note = { note : Integer, channel : Integer }
-let 
-  IntInt = { key : Integer, val : Integer}
-let 
-  IntChordType = { key : Integer, val : ChordTypes}
-let Chord = List Note
-let ChordPair = { key : Chord, val : Chord }
 -- let ChordsMap = List ChordPair
 let channel-zero = \(n : Integer) -> { note = n , channel = +0 }
 let
@@ -47,8 +51,8 @@ let
     concat-map IntInt ChordPair ( \(r: IntInt) -> 
       list-map IntChordType ChordPair ( \(ch : IntChordType) -> 
         {
-          key = [channel-zero r.key, channel-zero ch.key],
-          val = list-map Integer Note (\(x: Integer) ->  channel-zero (int-add x r.val)) (intervals ch.val)
+          key = chord [channel-zero r.key, channel-zero ch.key], 
+          val = chord (list-map Integer Note (\(x: Integer) ->  channel-zero (int-add x r.val)) (intervals ch.val))
         }
       )
       arg.chord_types

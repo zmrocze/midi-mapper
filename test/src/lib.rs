@@ -15,7 +15,6 @@ mod tests {
     }};
   }
 
-  #[ignore = "doesnt work now"]
   #[test]
   fn parse_config_default_dhall() {
     let path = test_case!("default_config.dhall");
@@ -43,5 +42,17 @@ mod tests {
     };
     let r = run_cli_parsing(cli);
     assert!(r.is_ok(), "parse_config_default_yaml failed {:?}", r);
+  }
+
+  #[test]
+  fn parse_config_simple_dhall() {
+    let path = test_case!("simple_config.dhall");
+    let cli = Cli {
+      config: Some(path),
+      name: Some("sone test name".to_string()),
+      profile: None,
+    };
+    let r = run_cli_parsing(cli);
+    assert!(r.is_ok(), "parse_config_simple_dhall failed {:?}", r);
   }
 }
