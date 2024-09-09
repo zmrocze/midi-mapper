@@ -1,6 +1,9 @@
 let list-map = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/map.dhall
 let concat-map = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/concatMap.dhall
 let int-add = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/Integer/add.dhall
+let int-eq = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/Integer/equal.dhall
+let int-sub = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/Integer/subtract.dhall
+-- let int-sub = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/Integer/subtract.dhall
 
 -- types
 let
@@ -57,7 +60,30 @@ let
       )
       arg.chord_types
     ) arg.roots
+let
+  range = \(range : {from : Integer, to : Integer }) -> 
+    List/build Integer (\(list : Type) -> \(cons : (Integer -> list -> list)) -> \(nil : list) -> 
+      let
+        len = Integer/clamp (int-sub range.to range.from)
+      let 
+        acc = Natural/fold len { k : Integer, xs : list }
+          (\(acc : { k : Integer, xs : list }) -> { k = int-add acc.k +1, xs = cons acc.k acc.xs })
+          { k = range.from, xs = nil }
+      in acc.xs
+    )
+let
+  note-range = \(arg : { channel : Integer, from : Integer, to : Integer }) ->
+    list-map Integer Note (\(x: Integer) -> { note = x, channel = arg.channel }) (range { from = arg.from, to = arg.to })
+
   in {
   by_chord_type = by_chord_type,
-  ChordTypes = ChordTypes
+  ChordTypes = ChordTypes,
+  Chord = Chord,
+  IntChordType = IntChordType,
+  IntInt = IntInt,
+  Note = Note,
+  ChordPair = ChordPair,
+  chord = chord,
+  channel-zero = channel-zero,
+  note-range = note-range,
 }

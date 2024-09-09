@@ -10,7 +10,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     flake-utils.url = "github:numtide/flake-utils";
-    midi-mapper-og = "github:zmrocze/midi-mapper/41e9610";
+    midi-mapper-og.url = "github:zmrocze/midi-mapper/41e9610";
+    # fenix.url = "github:nix-community/fenix/";
   };
 
   outputs = inputs@{ self, nixpkgs, flake-parts, my-lib, crane, flake-utils, midi-mapper-og, ... }:
@@ -30,6 +31,8 @@
         };
         systems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
         perSystem = { pkgs, lib, system, ... }: let 
+          # todo: how to set toolchain (need nightly 1.8) with this shit??
+          # craneLib = (crane.mkLib pkgs).overrideToolchain (p: builtins.trace fenix.packages.${p.system}.complete.toolchain fenix.packages.${p.system}.complete.toolchain);
           craneLib = crane.mkLib pkgs;
           src = craneLib.cleanCargoSource (craneLib.path ./.);
           commonArgs = {
@@ -110,17 +113,23 @@
               og-midi-mapper = midi-mapper-og.apps.${system}.midi_mapper;
             };
 
-            devShells.default = craneLib.devShell {
-              # Inherit inputs from checks.
-              checks = self.checks.${system};
+            # todo: make it work using a specified rust toolchain (to nightly 1.8)
+            # devShells.default = craneLib.devShell {
+            #   # Inherit inputs from checks.
+            #   checks = self.checks.${system};
 
-              # Additional dev-shell environment variables can be set directly
-              # MY_CUSTOM_DEVELOPMENT_VAR = "something else";
+            #   # Additional dev-shell environment variables can be set directly
+            #   # MY_CUSTOM_DEVELOPMENT_VAR = "something else";
 
-              # Extra inputs can be added here; cargo and rustc are provided by default.
-              packages = [
-              ];
-            };
+            #   # Extra inputs can be added here; cargo and rustc are provided by default.
+            #   packages = with pkgs; [
+            #     # alsa-lib
+            #     # pkg-config
+            #     dhall-yaml
+            #     dhall
+            #     dhall-lsp-server
+            #   ];
+            # };
           };
       };
 }

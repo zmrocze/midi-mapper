@@ -4,12 +4,13 @@ let
   nix_lib = builtins.getFlake "git+https://github.com/zmrocze/nix-lib";
 in
 pkgs.mkShell {
-  packages = [ 
+  packages = with pkgs ; [ 
   	# pkgs.alsa-plugins
-  	pkgs.alsa-lib
-  	pkgs.pkg-config
-  	pkgs.dhall-yaml
-  	pkgs.dhall-lsp-server
+  	alsa-lib
+  	pkg-config
+  	dhall-yaml
+  	dhall-lsp-server
+  	dhall
   	# nix_lib.devShells.${builtins.currentSystem}.default
   ];
 }
