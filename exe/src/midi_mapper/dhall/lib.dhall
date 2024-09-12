@@ -3,7 +3,12 @@ let concat-map = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0
 let int-add = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/Integer/add.dhall
 let int-eq = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/Integer/equal.dhall
 let int-sub = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/Integer/subtract.dhall
--- let int-sub = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/Integer/subtract.dhall
+let list-concat = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/concat.dhall
+let list-empty = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/empty.dhall
+let list-filter = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/filter.dhall
+let optional-null = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/Optional/null.dhall
+let list-unzip = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/unzip.dhall
+let list-cons = \(a : Type) -> \(x : a) -> \(xs : List a) -> list-concat a [ [ x ] , xs ]
 
 -- types
 let
@@ -21,13 +26,22 @@ let
     | AUGMAJ7
   >
 let Note = { note : Integer, channel : Integer }
+let Pair = \(l : Type) -> \(r : Type) -> { key : l, val : r }
+let unzip-pairs = \(l : Type) -> \(r : Type) -> \(xs : List (Pair l r)) ->
+  let yy = list-unzip l r (
+    list-map (Pair l r) { _1 : l, _2 : r } (\(x : Pair l r) -> { _1 = x.key, _2 = x.val }) xs
+  )
+  in { key = yy._1, val = yy._2 }
+let Mapping = \(l : Type) -> \(r : Type) -> List ( Pair l r )
+-- let NotePair = Pair Note Note
 let 
-  IntInt = { key : Integer, val : Integer}
+  IntInt = Pair Integer Integer
 let 
-  IntChordType = { key : Integer, val : ChordTypes}
+  IntChordType = Pair Integer ChordTypes
 let Chord = { notes : List Note }
 let chord = \(notes : List Note) -> { notes = notes }
-let ChordPair = { key : Chord, val : Chord }
+let ChordPair = Pair Chord Chord
+let Configuration = Mapping Chord Chord
 
 let intervals = \(type : ChordTypes) -> merge {
     MAJ = [+0, +4, +7],
@@ -74,7 +88,118 @@ let
 let
   note-range = \(arg : { channel : Integer, from : Integer, to : Integer }) ->
     list-map Integer Note (\(x: Integer) -> { note = x, channel = arg.channel }) (range { from = arg.from, to = arg.to })
+let
+  cross-product = \(a : Type ) -> \(xxs : List (List a)) ->
+    (List/fold (List a) xxs (List (List a))
+      (\(xs : List a) -> \(acc : (List (List a))) -> 
+        (concat-map a (List a)
+          (\(x : a) -> list-map (List a) (List a) (\(y : List a) -> list-cons a x y) acc )
+          xs
+        )
+      )
+      ([ (list-empty a) ])
+    )
+let subsequences = \(a : Type) -> \(xs : List a) ->
+    (List/fold a xs (List (List a))
+      (\(x : a) -> \(acc : List (List a)) -> 
+        list-concat (List a)
+          [
+            ( list-map (List a) (List a) (\(xs : List a) -> list-cons a x xs ) acc ),
+            acc
+          ]
+      )
+      [ (list-empty a) ]
+    )
+let
+  add-interval = \(root : Note) -> \(interval : Integer) -> { note = int-add root.note interval, channel = root.channel }
+let 
+  ByIntervalsSimpleT = {
+    roots : List Note,
+    intervals : List (List Note) -- every list can add a single note. that is: the result are subsequences of cartesian product of roots with intervals
+  }
+let
+  -- interval notes end on a channel of the interval note
+  -- so its possible to i.e. double a stream on two channels and send to two instruments
+  -- todo: mapping of notes to notes
+  -- todo: maybe treat root as just info and necessitate usage of 0 interval. this is a better ideas 
+  by_intervals_simple = \(config : ByIntervalsSimpleT) ->
+    let 
+      intervals = concat-map (List Note) (List Note) 
+      (\(chord : List Note) -> subsequences Note chord)
+      (cross-product Note config.intervals)
+    
+    in concat-map Note (List Note)
+      (\(root : Note) ->
+        list-map (List Note) (List Note)
+          (\(chord : List Note) -> list-concat Note [ [root], (list-map Note Note (\(n : Note) -> add-interval { note = root.note, channel = n.channel } n.note) chord)])
+          intervals
+      )
+      config.roots
+let
+  -- a chord here gets defined by a root and a list of intervals played in relation to that root.
+  -- when a chord is pressed - it will produce a played chord iff exactly one of the pressed notes defines a root
+  -- and at least one defines an interval (without the 0 interval even the root won't be played).
+  -- 
+  -- So we provide two mappings: 
+  --  - from pressed note to played root
+  --  - from pressed notes to played intervals
+  -- the second mapping is provided in a form of a list of mappings,
+  -- from every mapping in the list a single key can be pressed (we reduce that way number of total chords in the configuration for midi-mapper).
+  -- Any note as a key in the mapping should appear once: either in roots or in intervals. That's why the "roots" map can also contain interval notes.
+  -- Also note that a single note can define multiple intervals (note a List in the type).
+  ByIntervalsT = {
+    -- roots
+    roots : Mapping Note { root : Integer, intervals : List Note },
+    -- a list of interval groups.
+    -- a single note from an interval group CAN be triggered at one time
+    intervals : List (Mapping Note { intervals : List Note }) -- every list can add a single note. that is: the result are subsequences of cartesian product of roots with intervals
+  }
+let
+  by_intervals = \(config : ByIntervalsT) ->
+    let PressedInterval = (Pair Note { intervals : List Note })
+    let PressedRoot = (Pair Note { root : Integer, intervals : List Note })
+    let intervals_from_roots = list-map PressedRoot PressedInterval
+      (\(pair : PressedRoot) -> { key = pair.key ,  val = { intervals = pair.val.intervals } }) config.roots
+    let interval_chords_list = list-filter (List PressedInterval)
+      (\(xs : List PressedInterval) -> False == optional-null PressedInterval (List/head PressedInterval xs) )
+      (
+        concat-map (List PressedInterval) (List PressedInterval)
+          -- a full chord can be pressed or really any subset of it, so we do `concatMap subsequences` and then filter the empty
+          (\(chord : List PressedInterval) -> subsequences PressedInterval chord)
+          -- cross product: every interval group gives a single possible key for press
+          (cross-product PressedInterval
+            -- combine the interval group from "config.roots" with the interval groups from "config.intervals"
+            ( list-cons (List PressedInterval) intervals_from_roots config.intervals)
+          )
+      )
+    let roots = list-map PressedRoot (Pair Note Integer)
+      (\(pair : PressedRoot) -> { key = pair.key ,  val = pair.val.root }) config.roots
 
+    in concat-map (Pair Note Integer) ChordPair
+      (\(root : Pair Note Integer) ->
+        -- add all chords starting at the given root
+        list-map (List PressedInterval) ChordPair
+          (\(xs : List PressedInterval) ->
+            let IntervalChord = { intervals : List Note }
+            let tmp = unzip-pairs Note IntervalChord xs
+            let played_intervals = list-concat Note (list-map IntervalChord (List Note) (\(x : IntervalChord) -> x.intervals) tmp.val)
+            let pressed_notes = tmp.key
+            in {
+              -- play when the note for root and all intervals are pressed
+              key = chord (list-cons Note root.key pressed_notes), 
+              -- interpret chord relative to root
+              val = chord (
+                list-map Note Note
+                  (\(x : Note) ->
+                    add-interval { note = root.val, channel = x.channel } x.note
+                  )
+                  played_intervals
+                )
+            }
+          )
+          interval_chords_list
+      )
+      roots
   in {
   by_chord_type = by_chord_type,
   ChordTypes = ChordTypes,
@@ -86,4 +211,5 @@ let
   chord = chord,
   channel-zero = channel-zero,
   note-range = note-range,
+  by_intervals_simple = by_intervals_simple
 }
