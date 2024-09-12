@@ -203,12 +203,12 @@ let
   let
     NoteIntervalPair = Pair Note { intervals : List Note }
   let 
-    played_on_channel = \(channel : Integer) -> \(xs : List NoteIntervalPair) ->
+    played_on_channels = \(channels : List Integer) -> \(xs : List NoteIntervalPair) ->
       list-map NoteIntervalPair NoteIntervalPair 
         (\(x : NoteIntervalPair) -> 
           { 
             key = x.key, 
-            val = { intervals = list-map Note Note (\(n: Note) -> { channel = channel, note = n.note }) x.val.intervals }
+            val = { intervals = concat-map Note Note (\(n: Note) -> list-map Integer Note (\(channel : Integer) -> { channel = channel, note = n.note }) channels) x.val.intervals }
           })
         xs
   let
@@ -232,7 +232,7 @@ let
   note-range = note-range,
   -- by_intervals_simple = by_intervals_simple,
   by_intervals = by_intervals,
-  played_on_channel = played_on_channel,
+  played_on_channels = played_on_channels,
   direct_mapped_intervals = direct_mapped_intervals,
   direct_mapped_roots = direct_mapped_roots,
 }
