@@ -200,6 +200,25 @@ let
           interval_chords_list
       )
       roots
+  let
+    NoteIntervalPair = Pair Note { intervals : List Note }
+  let 
+    played_on_channel = \(channel : Integer) -> \(xs : List NoteIntervalPair) ->
+      list-map NoteIntervalPair NoteIntervalPair 
+        (\(x : NoteIntervalPair) -> 
+          { 
+            key = x.key, 
+            val = { intervals = list-map Note Note (\(n: Note) -> { channel = channel, note = n.note }) x.val.intervals }
+          })
+        xs
+  let
+    direct_mapped_intervals = \(xs : List Note) -> 
+      list-map Note (Pair Note { intervals : List Note }) (\(x : Note) -> { key = x, val = { intervals = [ x ] } }) xs
+  let
+    direct_mapped_roots = \(xs : List Note) ->
+      list-map Note (Pair Note { root : Integer, intervals : List Note })
+        (\(x : Note) -> { key = x, val = { root = x.note, intervals = [ { note = +0, channel = x.channel } ] } })
+        xs
   in {
   by_chord_type = by_chord_type,
   ChordTypes = ChordTypes,
@@ -211,5 +230,9 @@ let
   chord = chord,
   channel-zero = channel-zero,
   note-range = note-range,
-  by_intervals_simple = by_intervals_simple
+  -- by_intervals_simple = by_intervals_simple,
+  by_intervals = by_intervals,
+  played_on_channel = played_on_channel,
+  direct_mapped_intervals = direct_mapped_intervals,
+  direct_mapped_roots = direct_mapped_roots,
 }
