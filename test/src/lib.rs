@@ -55,4 +55,16 @@ mod tests {
     let r = run_cli_parsing(cli);
     assert!(r.is_ok(), "parse_config_simple_dhall failed {:?}", r);
   }
+
+  #[test]
+  fn parse_config_multi_channel_dhall() {
+    let path = test_case!("multi_channel.dhall");
+    let cli = Cli {
+      config: Some(path),
+      name: Some("multi_channel test name".to_string()),
+      profile: None,
+    };
+    let r = run_cli_parsing(cli);
+    assert!(r.is_ok(), "parse_config_multi_channel_dhall failed {:?}", r);
+  }
 }

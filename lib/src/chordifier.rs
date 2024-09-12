@@ -51,7 +51,9 @@ impl<'a> Deserialize<'a> for Channel {
     D: serde::Deserializer<'a>,
   {
     // Deserialize::deserialize(deserializer).map(|x: u8| Channel::new(x.into()))
-    deserializer.deserialize_any(NoteVisitor { _a: PhantomData::<Channel> })
+    deserializer.deserialize_any(NoteVisitor {
+      _a: PhantomData::<Channel>,
+    })
   }
 }
 
@@ -84,7 +86,9 @@ impl<'a> Deserialize<'a> for Note {
     D: serde::Deserializer<'a>,
   {
     // Deserialize::deserialize(deserializer).map(|x: u8| Note::new(x.into()))
-    deserializer.deserialize_any(NoteVisitor { _a: PhantomData::<Note> })
+    deserializer.deserialize_any(NoteVisitor {
+      _a: PhantomData::<Note>,
+    })
   }
 }
 
@@ -94,9 +98,11 @@ impl Note {
   }
 }
 
-struct NoteVisitor<A> { _a: std::marker::PhantomData<A> }
+struct NoteVisitor<A> {
+  _a: std::marker::PhantomData<A>,
+}
 
-impl<'de, A : From<u8>> Visitor<'de> for NoteVisitor<A> {
+impl<'de, A: From<u8>> Visitor<'de> for NoteVisitor<A> {
   type Value = A;
 
   fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -216,7 +222,10 @@ impl PressedChord {
     // update pressed notes
     let MidiData { channel, message } = note;
     match message {
-      MidiMessage::NoteOn { key, .. } => self.chord.notes.push( ChannelNote { channel : Channel::new(channel), note: key.into() }),
+      MidiMessage::NoteOn { key, .. } => self.chord.notes.push(ChannelNote {
+        channel: Channel::new(channel),
+        note: key.into(),
+      }),
       MidiMessage::NoteOff { key, .. } => {
         for (i, x) in self.chord.notes.iter().enumerate() {
           if key == x.note.note && channel == x.channel.channel {
@@ -275,11 +284,11 @@ impl MidiAction for Chordifier {
       Some(chord) => {
         for note in chord.notes.iter() {
           outport(MidiData {
-              message : MidiMessage::NoteOff {
-                key: note.note.note,
-                vel: u7::new(127),
-              },
-              channel: note.channel.channel,
+            message: MidiMessage::NoteOff {
+              key: note.note.note,
+              vel: u7::new(127),
+            },
+            channel: note.channel.channel,
           });
         }
         *playing = None;
@@ -291,12 +300,12 @@ impl MidiAction for Chordifier {
       Response::SendChord(chord) => {
         stop_playing(&mut outport);
         for note in chord.notes.iter() {
-          outport(MidiData { 
+          outport(MidiData {
             channel: note.channel.channel,
             message: MidiMessage::NoteOn {
               key: note.note.note,
               vel: u7::new(127),
-            }
+            },
           });
         }
         *playing = Some(chord.clone());

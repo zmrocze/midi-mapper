@@ -42,7 +42,7 @@ struct KeyVal<K, V> {
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Profile {
-  map : Vec<KeyVal<ChannelChord, ChannelChord>>
+  map: Vec<KeyVal<ChannelChord, ChannelChord>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -92,7 +92,14 @@ impl Default for ConfigFile {
 
 fn run(config: AppConfig) -> Result<(), Box<dyn Error>> {
   println!("Using profile: {}", config.profile_name);
-  let chords_map = ChordsMap::new(config.profile.map.into_iter().map(|x| (x.key, x.val)).collect());
+  let chords_map = ChordsMap::new(
+    config
+      .profile
+      .map
+      .into_iter()
+      .map(|x| (x.key, x.val))
+      .collect(),
+  );
   let chordifier = Chordifier::new(chords_map);
   create_virtual_midi_device(config.name.as_str(), chordifier)
 }
