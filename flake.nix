@@ -11,21 +11,26 @@
     };
     flake-utils.url = "github:numtide/flake-utils";
     midi-mapper-og.url = "github:zmrocze/midi-mapper/41e9610";
-    # fenix.url = "github:nix-community/fenix/";
+    # fenix.url = "github:nix-community/fenix/"; # doesnt work
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = inputs@{ self, nixpkgs, flake-parts, my-lib, crane, flake-utils, midi-mapper-og, ... }:
+  outputs = inputs@{ self, nixpkgs, flake-parts, my-lib, crane, flake-utils, midi-mapper-og, rust-overlay, ... }:
     let
       myLib = my-lib.lib;
     in
     flake-parts.lib.mkFlake { inherit inputs; }
       {      
         imports = [
-          inputs.my-lib.flakeModules.pkgs
+          my-lib.flakeModules.pkgs
         ];
         pkgsConfig = {
           overlays = [
-            inputs.my-lib.overlays.default
+            # my-lib.overlays.default
+            rust-overlay.overlays.default
           ];
           # systems = [ "x86_64-linux" ];
         };
@@ -33,7 +38,10 @@
         perSystem = { pkgs, lib, system, ... }: let 
           # todo: how to set toolchain (need nightly 1.8) with this shit??
           # craneLib = (crane.mkLib pkgs).overrideToolchain (p: builtins.trace fenix.packages.${p.system}.complete.toolchain fenix.packages.${p.system}.complete.toolchain);
-          craneLib = crane.mkLib pkgs;
+          # craneLib = (crane.mkLib (builtins.trace (builtins.toString (builtins.typeOf (pkgs.rust-bin.selectLatestNightlyWith (t: t.default)))) pkgs)).overrideToolchain (p: builtins.trace "1" p.rust-bin.selectLatestNightlyWith (toolchain: builtins.trace "2" toolchain.default));
+          craneLib = (crane.mkLib pkgs).overrideToolchain (p: p.rust-bin.stable.latest.default);
+
+          # craneLib = crane.mkLib pkgs;
           src = craneLib.cleanCargoSource (craneLib.path ./.);
           commonArgs = {
             inherit src;
