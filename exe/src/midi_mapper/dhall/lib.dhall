@@ -87,7 +87,7 @@ let
   range = \(range : {from : Integer, to : Integer }) -> 
     List/build Integer (\(list : Type) -> \(cons : (Integer -> list -> list)) -> \(nil : list) -> 
       let
-        len = Integer/clamp (int-sub range.to range.from)
+        len = Integer/clamp (int-sub range.from range.to)
       let 
         acc = Natural/fold len { k : Integer, xs : list }
           (\(acc : { k : Integer, xs : list }) -> { k = int-add acc.k +1, xs = cons acc.k acc.xs })
