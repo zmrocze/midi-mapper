@@ -1,15 +1,19 @@
 let list-map = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/map.dhall
 let concat-map = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/concatMap.dhall
 let int-add = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/Integer/add.dhall
+let int-mul = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/Integer/multiply.dhall
 let int-eq = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/Integer/equal.dhall
 let int-sub = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/Integer/subtract.dhall
 let list-concat = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/concat.dhall
 let list-empty = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/empty.dhall
 let list-filter = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/filter.dhall
 let optional-null = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/Optional/null.dhall
+let optional-default = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/Optional/default.dhall
 let list-unzip = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/unzip.dhall
 let list-cons = \(a : Type) -> \(x : a) -> \(xs : List a) -> list-concat a [ [ x ] , xs ]
-
+let list-mapWithIndex = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/mapWithIndex.dhall
+let list-zip = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/zip.dhall
+let list-index = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/index.dhall
 -- types
 let
   ChordTypes = <
@@ -32,6 +36,11 @@ let unzip-pairs = \(l : Type) -> \(r : Type) -> \(xs : List (Pair l r)) ->
     list-map (Pair l r) { _1 : l, _2 : r } (\(x : Pair l r) -> { _1 = x.key, _2 = x.val }) xs
   )
   in { key = yy._1, val = yy._2 }
+let zip-pairs = \(l : Type) -> \(r : Type) -> \(ls : List l) -> \(rs : List r) ->
+  let yy = list-zip l ls r rs
+  in (
+    list-map { _1 : l, _2 : r } (Pair l r) (\(x : { _1 : l, _2 : r }) -> { key = x._1, val = x._2 }) yy
+  )
 let Mapping = \(l : Type) -> \(r : Type) -> List ( Pair l r )
 -- let NotePair = Pair Note Note
 let 
@@ -219,6 +228,11 @@ let
       list-map Note (Pair Note { root : Integer, intervals : List Note })
         (\(x : Note) -> { key = x, val = { root = x.note, intervals = [ { note = +0, channel = x.channel } ] } })
         xs
+  let
+    -- list of notes send from mk2 in order reading row after row starting at bottom left
+    novation-mk2 = concat-map Integer Note
+      (\(tens: Integer) -> note-range { channel = +0, from = int-add tens +11, to = int-add tens +8 })
+      [+10, +20, +30, +40, +50, +60, +70, +80]
   in {
   by_chord_type = by_chord_type,
   ChordTypes = ChordTypes,
@@ -226,6 +240,10 @@ let
   IntChordType = IntChordType,
   IntInt = IntInt,
   Note = Note,
+  Pair = Pair,
+  Configuration = Configuration,
+  Mapping = Mapping,
+  ByIntervalsT = ByIntervalsT,
   ChordPair = ChordPair,
   chord = chord,
   channel-zero = channel-zero,
@@ -235,4 +253,18 @@ let
   played_on_channels = played_on_channels,
   direct_mapped_intervals = direct_mapped_intervals,
   direct_mapped_roots = direct_mapped_roots,
+  list-concat = list-concat,
+  list-cons = list-cons,
+  novation-mk2 = novation-mk2,
+  list-unzip = list-unzip,
+  list-map = list-map,
+  list-filter = list-filter,
+  list-empty = list-empty,
+  range = range,
+  int-add = int-add,
+  zip-pairs = zip-pairs,
+  unzip-pairs = unzip-pairs,
+  list-mapWithIndex = list-mapWithIndex,
+  list-index = list-index,
+  optional-default = optional-default
 }
