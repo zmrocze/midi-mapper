@@ -67,4 +67,16 @@ mod tests {
     let r = run_cli_parsing(cli);
     assert!(r.is_ok(), "parse_config_multi_channel_dhall failed {:?}", r);
   }
+
+  #[test]
+  fn parse_config_mk2_3by4() {
+    let path = test_case!("mk2_3by4.dhall");
+    let cli = Cli {
+      config: Some(path),
+      name: Some("mk2_3by4 test name".to_string()),
+      profile: None,
+    };
+    let r = run_cli_parsing(cli);
+    assert!(r.is_ok(), "parse_config_mk2_3by4 failed {:?}", r);
+  }
 }

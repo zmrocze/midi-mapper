@@ -42,6 +42,7 @@ struct KeyVal<K, V> {
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Profile {
+  setting_note_0vel_is_noteoff: Option<bool>,
   map: Vec<KeyVal<ChannelChord, ChannelChord>>,
 }
 
@@ -92,6 +93,9 @@ impl Default for ConfigFile {
 
 fn run(config: AppConfig) -> Result<(), Box<dyn Error>> {
   println!("Using profile: {}", config.profile_name);
+  // todo: this repeats!
+  let setting_note_0vel_is_noteoff = config.profile.setting_note_0vel_is_noteoff.unwrap_or(false);
+  if setting_note_0vel_is_noteoff {println!("Using note_0vel_is_noteoff=true")} else {}
   let chords_map = ChordsMap::new(
     config
       .profile
@@ -100,11 +104,11 @@ fn run(config: AppConfig) -> Result<(), Box<dyn Error>> {
       .map(|x| (x.key, x.val))
       .collect(),
   );
-  let chordifier = Chordifier::new(chords_map);
+  let chordifier = Chordifier::new(chords_map, setting_note_0vel_is_noteoff);
   create_virtual_midi_device(config.name.as_str(), chordifier)
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
+pub fn main() -> Result<(), Box<dyn Error>> {
   utils::common_inits::app_init()?;
   let cli = Cli::parse();
   run_cli_parsing(cli).and_then(run)

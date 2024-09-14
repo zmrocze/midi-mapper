@@ -15,6 +15,7 @@ let list-mapWithIndex = https://raw.githubusercontent.com/dhall-lang/dhall-lang/
 let list-zip = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/zip.dhall
 let list-index = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/index.dhall
 let list-mapMaybe = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/mapMaybe.dhall
+let list-reverse = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/reverse.dhall
 -- types
 let
   ChordTypes = <
@@ -87,7 +88,7 @@ let
     ) arg.roots
 let
   range = \(range : {from : Integer, to : Integer }) -> 
-    List/build Integer (\(list : Type) -> \(cons : (Integer -> list -> list)) -> \(nil : list) -> 
+    let reversed = List/build Integer (\(list : Type) -> \(cons : (Integer -> list -> list)) -> \(nil : list) -> 
       let
         len = Integer/clamp (int-sub range.from range.to)
       let 
@@ -96,6 +97,7 @@ let
           { k = range.from, xs = nil }
       in acc.xs
     )
+  in list-reverse Integer reversed
 let
   note-range = \(arg : { channel : Integer, from : Integer, to : Integer }) ->
     list-map Integer Note (\(x: Integer) -> { note = x, channel = arg.channel }) (range { from = arg.from, to = arg.to })

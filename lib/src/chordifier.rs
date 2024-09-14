@@ -217,24 +217,36 @@ impl PressedChord {
     }
   }
 
-  pub fn update<'a>(&mut self, mapping: &'a ChordsMap, note: MidiData) -> Response<'a> {
+  pub fn update<'a>(&mut self, mapping: &'a ChordsMap, setting_note_0vel_is_noteoff : bool, note: MidiData) -> Response<'a> {
     use Response::*;
     // update pressed notes
     let MidiData { channel, message } = note;
-    match message {
-      MidiMessage::NoteOn { key, .. } => self.chord.notes.push(ChannelNote {
+    // novation mk2 sends note off signal as NoteOn with velocity 0
+    // to deal with it we (optionaly) treat such note the same as NoteOff
+    let note_on = |key : u7, notes : &mut Vec<ChannelNote>| {
+      notes.push(ChannelNote {
         channel: Channel::new(channel),
         note: key.into(),
-      }),
-      MidiMessage::NoteOff { key, .. } => {
-        for (i, x) in self.chord.notes.iter().enumerate() {
-          if key == x.note.note && channel == x.channel.channel {
-            self.chord.notes.swap_remove(i);
-            break;
-          }
+      })
+    };
+    let note_off = |key : u7, notes : &mut Vec<ChannelNote> | {
+      for (i, x) in notes.iter().enumerate() {
+        if key == x.note.note && channel == x.channel.channel {
+          notes.swap_remove(i);
+          break;
         }
       }
-      other => return Passthrough(note.clone()),
+    };
+    match message {
+      MidiMessage::NoteOn { key, vel } => if setting_note_0vel_is_noteoff {
+        if vel == u7::new(0) {note_off(key, &mut self.chord.notes)}
+        else {note_on(key, &mut self.chord.notes)}
+      }
+      else {
+        note_on(key, &mut self.chord.notes)
+      },
+      MidiMessage::NoteOff { key, .. } => note_off(key, &mut self.chord.notes),
+      _other => return Passthrough(note.clone()),
     }
     // update playing notes
     if let Some(chord) = mapping.map(&self.chord) {
@@ -252,6 +264,8 @@ impl PressedChord {
 pub struct Chordifier {
   // static mapping between chords
   mapping: ChordsMap,
+  // setting option: do we treat noteOn with vel=0 as noteOff. [for novation mk2]
+  setting_note_0vel_is_noteoff: bool,
   // currently pressed ChannelChord
   pressed: PressedChord,
   // currently playing ChannelChord
@@ -259,9 +273,10 @@ pub struct Chordifier {
 }
 
 impl Chordifier {
-  pub fn new(mapping: ChordsMap) -> Self {
+  pub fn new(mapping: ChordsMap, setting_note_0vel_is_noteoff : bool) -> Self {
     Self {
       mapping,
+      setting_note_0vel_is_noteoff,
       pressed: PressedChord::empty(),
       playing: None,
     }
@@ -277,6 +292,7 @@ impl MidiAction for Chordifier {
     O: FnMut(MidiData),
   {
     let mapping = &self.mapping;
+    let setting_note_0vel_is_noteoff = self.setting_note_0vel_is_noteoff;
     let pressed = &mut self.pressed;
     let playing = &mut self.playing;
     // The pressed ChannelChord changes in the case of SendChord and Received.
@@ -296,7 +312,7 @@ impl MidiAction for Chordifier {
       None => (),
     };
     // Sends chords with max velocity!
-    match pressed.update(mapping, data) {
+    match pressed.update(mapping, setting_note_0vel_is_noteoff, data) {
       Response::SendChord(chord) => {
         stop_playing(&mut outport);
         for note in chord.notes.iter() {
