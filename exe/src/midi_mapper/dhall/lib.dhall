@@ -167,8 +167,8 @@ let
   by_intervals = \(config : ByIntervalsT) ->
     let PressedInterval = (Pair Note { intervals : List Note })
     let PressedRoot = (Pair Note { root : Integer, intervals : List Note })
-    let intervals_from_roots = list-map PressedRoot PressedInterval
-      (\(pair : PressedRoot) -> { key = pair.key ,  val = { intervals = pair.val.intervals } }) config.roots
+    -- let intervals_from_roots = list-map PressedRoot PressedInterval
+    --   (\(pair : PressedRoot) -> { key = pair.key ,  val = { intervals = pair.val.intervals } }) config.roots
     let interval_chords_list = list-filter (List PressedInterval)
       (\(xs : List PressedInterval) -> False == optional-null PressedInterval (List/head PressedInterval xs) )
       (
@@ -176,22 +176,24 @@ let
           -- a full chord can be pressed or really any subset of it, so we do `concatMap subsequences` and then filter the empty
           (\(chord : List PressedInterval) -> subsequences PressedInterval chord)
           -- cross product: every interval group gives a single possible key for press
-          (cross-product PressedInterval
-            -- combine the interval group from "config.roots" with the interval groups from "config.intervals"
-            ( list-cons (List PressedInterval) intervals_from_roots config.intervals)
-          )
+          (cross-product PressedInterval config.intervals)
       )
-    let roots = list-map PressedRoot (Pair Note Integer)
-      (\(pair : PressedRoot) -> { key = pair.key ,  val = pair.val.root }) config.roots
 
-    in concat-map (Pair Note Integer) ChordPair
-      (\(root : Pair Note Integer) ->
+    in concat-map PressedRoot ChordPair
+      (\(root : PressedRoot) ->
         -- add all chords starting at the given root
         list-map (List PressedInterval) ChordPair
           (\(xs : List PressedInterval) ->
             let IntervalChord = { intervals : List Note }
             let tmp = unzip-pairs Note IntervalChord xs
-            let played_intervals = list-concat Note (list-map IntervalChord (List Note) (\(x : IntervalChord) -> x.intervals) tmp.val)
+            -- intervals defined by the pressed notes
+            -- plus the intervals defined by the pressed root
+            let played_intervals = list-concat Note
+              (list-cons (List Note)
+                (root.val.intervals) -- pressing root adds already these intervals (usually 0th)
+                (list-map IntervalChord (List Note) (\(x : IntervalChord) -> x.intervals) tmp.val)
+              )
+            -- pressed notes other than the root
             let pressed_notes = tmp.key
             in {
               -- play when the note for root and all intervals are pressed
@@ -200,7 +202,7 @@ let
               val = chord (
                 list-map Note Note
                   (\(x : Note) ->
-                    add-interval { note = root.val, channel = x.channel } x.note
+                    add-interval { note = root.val.root, channel = x.channel } x.note
                   )
                   played_intervals
                 )
@@ -208,7 +210,7 @@ let
           )
           interval_chords_list
       )
-      roots
+      config.roots
   let
     NoteIntervalPair = Pair Note { intervals : List Note }
   let 
