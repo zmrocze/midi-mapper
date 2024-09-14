@@ -233,7 +233,7 @@ let
   let
     -- list of notes send from mk2 in order reading row after row starting at bottom left
     novation-mk2 = concat-map Integer Note
-      (\(tens: Integer) -> note-range { channel = +0, from = int-add tens +11, to = int-add tens +8 })
+      (\(tens: Integer) -> note-range { channel = +0, from = int-add tens +1, to = int-add tens +9 })
       [+10, +20, +30, +40, +50, +60, +70, +80]
   in {
   by_chord_type = by_chord_type,

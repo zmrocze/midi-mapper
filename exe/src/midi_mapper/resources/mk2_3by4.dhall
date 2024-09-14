@@ -38,7 +38,7 @@ in { profiles.default.map
       ,
 
       intervals = [
-        (lib.played_on_channels [+0] (lib.direct_mapped_intervals (lib.note-range { channel = +1, from = +0, to = +12 })))
+        (lib.played_on_channels [+1] (lib.direct_mapped_intervals (lib.note-range { channel = +1, from = +0, to = +12 })))
       ]
     }
   in lib.by_intervals config
