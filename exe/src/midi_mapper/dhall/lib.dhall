@@ -14,6 +14,7 @@ let list-cons = \(a : Type) -> \(x : a) -> \(xs : List a) -> list-concat a [ [ x
 let list-mapWithIndex = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/mapWithIndex.dhall
 let list-zip = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/zip.dhall
 let list-index = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/index.dhall
+let list-mapMaybe = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.0.0/Prelude/List/mapMaybe.dhall
 -- types
 let
   ChordTypes = <
@@ -41,6 +42,7 @@ let zip-pairs = \(l : Type) -> \(r : Type) -> \(ls : List l) -> \(rs : List r) -
   in (
     list-map { _1 : l, _2 : r } (Pair l r) (\(x : { _1 : l, _2 : r }) -> { key = x._1, val = x._2 }) yy
   )
+let list-not-null = \(A : Type ) -> (\(xs : List A) -> False == optional-null A (List/head A xs) )
 let Mapping = \(l : Type) -> \(r : Type) -> List ( Pair l r )
 -- let NotePair = Pair Note Note
 let 
@@ -167,22 +169,17 @@ let
   by_intervals = \(config : ByIntervalsT) ->
     let PressedInterval = (Pair Note { intervals : List Note })
     let PressedRoot = (Pair Note { root : Integer, intervals : List Note })
-    -- let intervals_from_roots = list-map PressedRoot PressedInterval
-    --   (\(pair : PressedRoot) -> { key = pair.key ,  val = { intervals = pair.val.intervals } }) config.roots
-    let interval_chords_list = list-filter (List PressedInterval)
-      (\(xs : List PressedInterval) -> False == optional-null PressedInterval (List/head PressedInterval xs) )
-      (
-        concat-map (List PressedInterval) (List PressedInterval)
-          -- a full chord can be pressed or really any subset of it, so we do `concatMap subsequences` and then filter the empty
-          (\(chord : List PressedInterval) -> subsequences PressedInterval chord)
-          -- cross product: every interval group gives a single possible key for press
-          (cross-product PressedInterval config.intervals)
-      )
+    let interval_chords_list =
+      concat-map (List PressedInterval) (List PressedInterval)
+        -- a full chord can be pressed or really any subset of it, so we do `concatMap subsequences` and then filter the empty
+        (\(chord : List PressedInterval) -> subsequences PressedInterval chord)
+        -- cross product: every interval group gives a single possible key for press
+        (cross-product PressedInterval config.intervals)
 
     in concat-map PressedRoot ChordPair
       (\(root : PressedRoot) ->
         -- add all chords starting at the given root
-        list-map (List PressedInterval) ChordPair
+        list-mapMaybe (List PressedInterval) ChordPair
           (\(xs : List PressedInterval) ->
             let IntervalChord = { intervals : List Note }
             let tmp = unzip-pairs Note IntervalChord xs
@@ -195,18 +192,21 @@ let
               )
             -- pressed notes other than the root
             let pressed_notes = tmp.key
-            in {
-              -- play when the note for root and all intervals are pressed
-              key = chord (list-cons Note root.key pressed_notes), 
-              -- interpret chord relative to root
-              val = chord (
-                list-map Note Note
-                  (\(x : Note) ->
-                    add-interval { note = root.val.root, channel = x.channel } x.note
+            -- filter the empty played chord
+            in if list-not-null Note played_intervals then
+              Some {
+                -- play when the note for root and all intervals are pressed
+                key = chord (list-cons Note root.key pressed_notes), 
+                -- interpret chord relative to root
+                val = chord (
+                  list-map Note Note
+                    (\(x : Note) ->
+                      add-interval { note = root.val.root, channel = x.channel } x.note
+                    )
+                    played_intervals
                   )
-                  played_intervals
-                )
-            }
+              }
+            else None ChordPair
           )
           interval_chords_list
       )
@@ -268,5 +268,6 @@ let
   unzip-pairs = unzip-pairs,
   list-mapWithIndex = list-mapWithIndex,
   list-index = list-index,
-  optional-default = optional-default
+  optional-default = optional-default,
+  list-mapMaybe = list-mapMaybe,
 }
