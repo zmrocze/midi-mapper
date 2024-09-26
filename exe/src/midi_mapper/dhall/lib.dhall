@@ -237,6 +237,27 @@ let
     novation-mk2 = concat-map Integer Note
       (\(tens: Integer) -> note-range { channel = +0, from = int-add tens +1, to = int-add tens +9 })
       [+10, +20, +30, +40, +50, +60, +70, +80]
+  let
+    -- basically: map (index list) indices
+    -- select indices from a list of keys from keyboard, use 0 note as default
+    select_from_keyboard = \(arg : { indices : List Integer, keys : List Note }) -> 
+      ( list-map Integer Note
+                  (\(i : Integer) ->
+                    optional-default Note {note = +0, channel=+0}
+                      (list-index (Integer/clamp i) Note arg.keys)
+                  )
+        arg.indices
+      )
+  let
+    create_contingent_mapping = \(args : { keys : List Note, from : Integer, channel : Integer } ) ->
+      let n = List/length Note args.keys
+      in
+        (zip-pairs Note Note
+          -- trigger notes
+          args.keys
+          -- played notes, from `from` to `from+n`, 50 is reasonable for `from`
+          (note-range { channel = args.channel, from = args.from, to = int-add args.from (Natural/toInteger n) })
+        )
   in {
   by_chord_type = by_chord_type,
   ChordTypes = ChordTypes,
@@ -272,4 +293,6 @@ let
   list-index = list-index,
   optional-default = optional-default,
   list-mapMaybe = list-mapMaybe,
+  create_contingent_mapping = create_contingent_mapping,
+  select_from_keyboard = select_from_keyboard,
 }
