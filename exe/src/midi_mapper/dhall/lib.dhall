@@ -238,6 +238,9 @@ let
       (\(tens: Integer) -> note-range { channel = +0, from = int-add tens +1, to = int-add tens +9 })
       [+10, +20, +30, +40, +50, +60, +70, +80]
   let
+    -- list of notes send from minifreak from left to right (3 octaves)
+    minifreak = note-range { channel = +0, from = +48, to = +84 }
+  let
     -- basically: map (index list) indices
     -- select indices from a list of keys from keyboard, use 0 note as default
     select_from_keyboard = \(arg : { indices : List Integer, keys : List Note }) -> 
@@ -295,4 +298,5 @@ let
   list-mapMaybe = list-mapMaybe,
   create_contingent_mapping = create_contingent_mapping,
   select_from_keyboard = select_from_keyboard,
+  minifreak = minifreak,
 }
