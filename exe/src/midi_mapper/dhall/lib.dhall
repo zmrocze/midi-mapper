@@ -31,6 +31,20 @@ let
     | HDIM7
     | AUGMAJ7
   >
+let all_chord_types = [
+    ChordTypes.MAJ
+  , ChordTypes.MIN
+  , ChordTypes.DIM
+  , ChordTypes.AUG
+  , ChordTypes.DOM7
+  , ChordTypes.MIN7
+  , ChordTypes.MAJ7
+  , ChordTypes.MINMAJ7
+  , ChordTypes.DIM7
+  , ChordTypes.HDIM7
+  , ChordTypes.AUGMAJ7
+  ]
+
 let Note = { note : Integer, channel : Integer }
 let Pair = \(l : Type) -> \(r : Type) -> { key : l, val : r }
 let unzip-pairs = \(l : Type) -> \(r : Type) -> \(xs : List (Pair l r)) ->
@@ -299,4 +313,5 @@ let
   create_contingent_mapping = create_contingent_mapping,
   select_from_keyboard = select_from_keyboard,
   minifreak = minifreak,
+  all_chord_types = all_chord_types,
 }
