@@ -1,6 +1,6 @@
 let 
   lib = https://raw.githubusercontent.com/zmrocze/midi-mapper/develop/exe/src/midi_mapper/dhall/lib.dhall
-in { profiles.default.map
+in { profiles.simple.map
   =
   let chord_types =
     [ { key = +53, val = lib.ChordTypes.MAJ }

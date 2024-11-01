@@ -79,4 +79,28 @@ mod tests {
     let r = run_cli_parsing(cli);
     assert!(r.is_ok(), "parse_config_mk2_3by4 failed {:?}", r);
   }
+
+  #[test]
+  fn parse_config_minifreak() {
+    let path = test_case!("minifreak.dhall");
+    let cli = Cli {
+      config: Some(path),
+      name: Some("minifreak test name".to_string()),
+      profile: None,
+    };
+    let r = run_cli_parsing(cli);
+    assert!(r.is_ok(), "parse_config_minifreak failed {:?}", r);
+  }
+
+  #[test]
+  fn parse_config_configs() {
+    let path = test_case!("configs.dhall");
+    let cli = Cli {
+      config: Some(path),
+      name: Some("configs test name".to_string()),
+      profile: None,
+    };
+    let r = run_cli_parsing(cli);
+    assert!(r.is_ok(), "configs.dhall failed {:?}", r);
+  }
 }
