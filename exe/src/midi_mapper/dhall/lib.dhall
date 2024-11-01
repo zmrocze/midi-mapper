@@ -101,7 +101,7 @@ let
       arg.chord_types
     ) arg.roots
 let
-  range = \(range : {from : Integer, to : Integer }) -> 
+  range = \(range : { from : Integer, to : Integer }) -> 
     let reversed = List/build Integer (\(list : Type) -> \(cons : (Integer -> list -> list)) -> \(nil : list) -> 
       let
         len = Integer/clamp (int-sub range.from range.to)
@@ -239,7 +239,7 @@ let
           })
         xs
   let
-    direct_mapped_intervals = \(xs : List Note) -> 
+    middle_mapped_intervals = \(xs : List Note) -> 
       list-map Note (Pair Note { intervals : List Note }) (\(x : Note) -> { key = x, val = { intervals = [ x ] } }) xs
   let
     direct_mapped_roots = \(xs : List Note) ->
@@ -275,6 +275,14 @@ let
           -- played notes, from `from` to `from+n`, 50 is reasonable for `from`
           (note-range { channel = args.channel, from = args.from, to = int-add args.from (Natural/toInteger n) })
         )
+  -- interval 0 corresponds to +60, cotave to +61
+  let middle_mapped_intervals = \(xs : List Note) -> 
+      list-map Note (Pair Note { intervals : List Note})
+        (\(n : Note) -> {
+          key = { note = int-add +60 n.note, channel = n.channel },
+          val = { intervals = [ { note = n.note, channel = n.channel } ] }
+        })
+        xs
   in {
   by_chord_type = by_chord_type,
   ChordTypes = ChordTypes,
@@ -293,7 +301,7 @@ let
   -- by_intervals_simple = by_intervals_simple,
   by_intervals = by_intervals,
   played_on_channels = played_on_channels,
-  direct_mapped_intervals = direct_mapped_intervals,
+  middle_mapped_intervals = middle_mapped_intervals,
   direct_mapped_roots = direct_mapped_roots,
   list-concat = list-concat,
   list-cons = list-cons,
