@@ -32,17 +32,17 @@ let
     | AUGMAJ7
   >
 let all_chord_types = [
-    ChordTypes.MAJ
-  , ChordTypes.MIN
-  , ChordTypes.DIM
-  , ChordTypes.AUG
-  , ChordTypes.DOM7
-  , ChordTypes.MIN7
-  , ChordTypes.MAJ7
-  , ChordTypes.MINMAJ7
-  , ChordTypes.DIM7
-  , ChordTypes.HDIM7
-  , ChordTypes.AUGMAJ7
+      ChordTypes.MAJ      -- 0
+    , ChordTypes.MIN      -- 1
+    , ChordTypes.DIM      -- 2
+    , ChordTypes.AUG      -- 3
+    , ChordTypes.DOM7     -- 4
+    , ChordTypes.MIN7     -- 5
+    , ChordTypes.MAJ7     -- 6
+    , ChordTypes.MINMAJ7  -- 7
+    , ChordTypes.DIM7     -- 8
+    , ChordTypes.HDIM7    -- 9
+    , ChordTypes.AUGMAJ7  -- 10
   ]
 
 let Note = { note : Integer, channel : Integer }
