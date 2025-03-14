@@ -86,7 +86,7 @@ let intervals = \(type : ChordTypes) -> merge {
 -- let ChordsMap = List ChordPair
 let channel-zero = \(n : Integer) -> { note = n , channel = +0 }
 let
-  -- using midi channel 0 
+  -- using midi channel 0
   by_chord_type = \(arg : { 
     roots : List IntInt, 
     chord_types : List IntChordType
@@ -100,6 +100,22 @@ let
       )
       arg.chord_types
     ) arg.roots
+let
+  -- using midi channel 0
+  by_chord_intervals = \(arg : { 
+    roots : List IntInt, 
+    chord_types : List (Pair Integer (List Integer))
+  } ) ->
+    concat-map IntInt ChordPair ( \(r: IntInt) -> 
+      list-map (Pair Integer (List Integer)) ChordPair ( \(ch : Pair Integer (List Integer)) -> 
+        {
+          key = chord [channel-zero r.key, channel-zero ch.key], 
+          val = chord (list-map Integer Note (\(x: Integer) ->  channel-zero (int-add x r.val)) (ch.val))
+        }
+      )
+      arg.chord_types
+    ) arg.roots
+
 let
   range = \(range : { from : Integer, to : Integer }) -> 
     let reversed = List/build Integer (\(list : Type) -> \(cons : (Integer -> list -> list)) -> \(nil : list) -> 
@@ -167,7 +183,7 @@ let
   -- when a chord is pressed - it will produce a played chord iff exactly one of the pressed notes defines a root
   -- and at least one defines an interval (without the 0 interval even the root won't be played).
   -- 
-  -- So we provide two mappings: 
+  -- So we provide two mappings:
   --  - from pressed note to played root
   --  - from pressed notes to played intervals
   -- the second mapping is provided in a form of a list of mappings,
@@ -179,7 +195,8 @@ let
     roots : Mapping Note { root : Integer, intervals : List Note },
     -- a list of interval groups.
     -- a single note from an interval group CAN be triggered at one time
-    intervals : List (Mapping Note { intervals : List Note }) -- every list can add a single note. that is: the result are subsequences of cartesian product of roots with intervals
+    -- every list can add a single note. that is: the result are subsequences of cartesian product of roots with intervals
+    intervals : List (Mapping Note { intervals : List Note })
   }
 let
   by_intervals = \(config : ByIntervalsT) ->
