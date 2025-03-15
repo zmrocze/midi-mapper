@@ -302,6 +302,7 @@ let
         xs
   in {
   by_chord_type = by_chord_type,
+  by_chord_intervals = by_chord_intervals,
   ChordTypes = ChordTypes,
   Chord = Chord,
   IntChordType = IntChordType,
