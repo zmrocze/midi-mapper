@@ -85,6 +85,8 @@ let intervals = \(type : ChordTypes) -> merge {
 
 -- let ChordsMap = List ChordPair
 let channel-zero = \(n : Integer) -> { note = n , channel = +0 }
+let on-channel = \(arg: { channel : Integer, notes : List Integer }) ->
+  list-map Integer Note (\(x: Integer) -> { note = x, channel = arg.channel }) arg.notes
 let
   -- using midi channel 0
   by_chord_type = \(arg : { 
@@ -255,9 +257,9 @@ let
             val = { intervals = concat-map Note Note (\(n: Note) -> list-map Integer Note (\(channel : Integer) -> { channel = channel, note = n.note }) channels) x.val.intervals }
           })
         xs
-  let
-    middle_mapped_intervals = \(xs : List Note) -> 
-      list-map Note (Pair Note { intervals : List Note }) (\(x : Note) -> { key = x, val = { intervals = [ x ] } }) xs
+  -- let
+  --   middle_mapped_intervals = \(xs : List Note) -> 
+  --     list-map Note (Pair Note { intervals : List Note }) (\(x : Note) -> { key = x, val = { intervals = [ x ] } }) xs
   let
     direct_mapped_roots = \(xs : List Note) ->
       list-map Note (Pair Note { root : Integer, intervals : List Note })
@@ -297,7 +299,7 @@ let
       list-map Note (Pair Note { intervals : List Note})
         (\(n : Note) -> {
           key = { note = int-add +60 n.note, channel = n.channel },
-          val = { intervals = [ { note = n.note, channel = n.channel } ] }
+          val = { intervals = [ n ] }
         })
         xs
   in {
@@ -315,6 +317,7 @@ let
   ChordPair = ChordPair,
   chord = chord,
   channel-zero = channel-zero,
+  on-channel = on-channel,
   note-range = note-range,
   -- by_intervals_simple = by_intervals_simple,
   by_intervals = by_intervals,
