@@ -14,3 +14,10 @@ think how to use
 
 yaml or dhall (to easily specify mapping between all 127 notes)
 but probably doesnt work with current config
+
+
+
+## errors parsing
+
+empty list
+no let in second half
