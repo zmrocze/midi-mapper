@@ -64,6 +64,7 @@
               ./Cargo.lock
               ./utils
               ./lib
+              ./test
               crate
             ];
           };
